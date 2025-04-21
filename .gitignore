@@ -1,0 +1,4 @@
+node_modules
+/smoke-test-out.png
+/.idea
+/.DS_Store
