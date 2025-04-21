@@ -44858,7 +44858,7 @@ void main() {
 	            // Simulation environment
 	            bounds: 500,
 	            // Visual appearance
-	            backgroundColor: '#ffffff',
+	            backgroundColor: '#fff',
 	            birdColor: '#ccc'
 	        }, options);
 
@@ -45064,7 +45064,6 @@ void main() {
 	        };
 	    }
 
-
 	    /**
 	     * Render a single frame: update GPGPU, uniforms, and draw the scene.
 	     */
@@ -45152,7 +45151,6 @@ void main() {
 	        this.halfY = height / 2;
 	    }
 
-
 	    /**
 	     * Fill the position texture with initial random positions for the birds.
 	     * @param {THREE.DataTexture} texture - The texture to fill with position data.
@@ -45186,7 +45184,6 @@ void main() {
 	            data[i + 3] = 1;
 	        }
 	    }
-
 
 	    /**
 	     * Stop the animation loop and clean up resources.
