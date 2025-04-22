@@ -2,40 +2,38 @@
 <html lang="en">
 
 <head>
-	<title>Flocking Simulation</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-	<!-- Place this tag in your head or just before your close body tag. -->
-	<script async defer src="https://buttons.github.io/buttons.js"></script>
-	<style>
-		body {
-			margin: 0px;
-			overflow: hidden;
-			cursor: pointer;
-		}
+  <title>Flocking Simulation</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <style>
+    body {
+      margin: 0px;
+      overflow: hidden;
+      cursor: pointer;
+    }
 
-		#container {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			z-index: -1;
-		}
-	</style>
+    #container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+  </style>
 </head>
 
 <body>
-	<div id="container"></div>
-	<script src="dist/starlings.bundle.min.js"></script>
-	<script>
-		const sim = new Starlings('#container', {
-			birds: 4096,
-			// resolution: 72,
-			birdColor: '#ccf'
-		});
-		sim.start();
-	</script>
+<div id="container"></div>
+<script src="dist/starlings.bundle.min.js"></script>
+<script>
+    const sim = new Starlings('#container', {
+        birds: 4096,
+        // resolution: 72,
+        birdColor: '#aaa'
+    });
+    sim.start();
+</script>
 </body>
 
 </html>

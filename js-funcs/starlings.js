@@ -114,7 +114,7 @@ class Starlings {
         this.initScene();
         this.initComputeRenderer();
         this.initBirds();
-        
+
         console.log('Simulation initialized successfully, starting animation loop');
         this.animate();
     }
