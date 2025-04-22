@@ -2,6 +2,8 @@
 
 A modern, modular JavaScript simulation of starling flocking (murmuration) using Three.js, GLSL shaders, and ES modules. Shaders are organized in separate `.glsl` files and the project is bundled with Rollup.
 
+This is a fork and upgrade of [techcentaur](https://github.com/techcentaur/Flocking-Simulation). Specifically, this fork eliminates unused code, adds some new options, upgrades the three library, and is packaged as a modern minified package. Thank you to the original authors!
+
 ## View a Demo
    ```sh
    open index.html
