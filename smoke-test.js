@@ -63,7 +63,7 @@ function waitForServerReady(getUrl, getPort, timeout = SERVER_START_TIMEOUT) {
         const start = Date.now();
 
         /**
-         *
+         * Check if the server is ready to accept connections
          */
         function check() {
             const port = getPort();
@@ -82,7 +82,7 @@ function waitForServerReady(getUrl, getPort, timeout = SERVER_START_TIMEOUT) {
         }
 
         /**
-         *
+         * Retry server connection check after delay
          */
         function retry() {
             if (Date.now() - start > timeout) {

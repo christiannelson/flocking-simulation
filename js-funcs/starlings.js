@@ -62,6 +62,9 @@ class Starlings {
             ? document.querySelector(selector)
             : selector;
         if (!this.container) throw new Error(`Container not found: ${selector}`);
+        
+        // Initialize animation frame ID
+        this._rafId = null;
     }
 
     /**
@@ -171,9 +174,9 @@ class Starlings {
      * Creates and configures textures for position and velocity calculations.
      */
     initComputeRenderer() {
-        const argumentHash = this.options.resolution;
+        const resolution = this.options.resolution;
         const bounds = this.options.bounds;
-        this.gpuAllocation = new GPUComputationRenderer(argumentHash, argumentHash, this.renderer);
+        this.gpuAllocation = new GPUComputationRenderer(resolution, resolution, this.renderer);
 
         const dtPosition = this.gpuAllocation.createTexture();
         const dtVelocity = this.gpuAllocation.createTexture();
@@ -194,7 +197,6 @@ class Starlings {
         this.uniformPosition.del_change = {value: 0.0};
         this.uniformVelocity.clock = {value: 1.0};
         this.uniformVelocity.del_change = {value: 0.0};
-        this.uniformVelocity.testing = {value: 1.0};
         this.uniformVelocity.separation_distance = {value: this.options.separation};
         this.uniformVelocity.alignment_distance = {value: this.options.alignment};
         this.uniformVelocity.cohesion_distance = {value: this.options.cohesion};
@@ -208,7 +210,10 @@ class Starlings {
         this.positionVariable.wrapT = THREE.RepeatWrapping;
 
         const error = this.gpuAllocation.init();
-        if (error !== null) console.error(error);
+        if (error !== null) {
+            console.error('GPUComputationRenderer initialization error:', error);
+            throw new Error('GPU computation initialization failed: ' + error);
+        }
     }
 
     /**
@@ -277,16 +282,19 @@ class Starlings {
         this.uniformPosition.clock.value = now;
         this.uniformPosition.del_change.value = delta;
 
-        // Update predator (mouse/touch) position for flocking influence
-        this.uniformVelocity.predator.value.set(
-            0.5 * this.mouseX / this.halfX,
-            -0.5 * this.mouseY / this.halfY,
-            0
-        );
-
-        // Reset mouse/touch position so predator only affects for a single frame
-        this.mouseX = 10000;
-        this.mouseY = 10000;
+        // Only update predator position if mouse/touch is active (within bounds)
+        if (Math.abs(this.mouseX) < this.halfX * 10 && Math.abs(this.mouseY) < this.halfY * 10) {
+            // Update predator (mouse/touch) position for flocking influence
+            this.uniformVelocity.predator.value.set(
+                0.5 * this.mouseX / this.halfX,
+                -0.5 * this.mouseY / this.halfY,
+                0
+            );
+            
+            // Reset mouse/touch position so predator only affects for a single frame
+            this.mouseX = 10000;
+            this.mouseY = 10000;
+        }
 
         // Run GPGPU computation for simulation step
         this.gpuAllocation.compute();
@@ -387,6 +395,25 @@ class Starlings {
         if (this._rafId !== null) {
             cancelAnimationFrame(this._rafId);
             this._rafId = null;
+        }
+        
+        // Remove event listeners
+        if (this.wrapper) {
+            this.wrapper.removeEventListener('mousemove', this.onDocumentMouseMove.bind(this));
+            this.wrapper.removeEventListener('touchstart', this.onDocumentTouchStart.bind(this));
+            this.wrapper.removeEventListener('touchmove', this.onDocumentTouchMove.bind(this));
+        }
+        window.removeEventListener('resize', this.onWindowResize.bind(this));
+        
+        // Dispose Three.js resources
+        if (this.birdMesh) {
+            this.scene.remove(this.birdMesh);
+            this.birdMesh.geometry.dispose();
+            this.birdMesh.material.dispose();
+        }
+        
+        if (this.renderer) {
+            this.renderer.dispose();
         }
     }
 }

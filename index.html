@@ -25,14 +25,16 @@
 
 <body>
 <div id="container"></div>
-<script src="dist/starlings.bundle.min.js"></script>
-<script>
-    const sim = new Starlings('#container', {
-        birds: 4096,
-        // resolution: 72,
-        birdColor: '#aaa'
+<script src="dist/starlings.bundle.min.js" defer></script>
+<script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sim = new Starlings('#container', {
+            birds: 4096,
+            // resolution: 72,
+            birdColor: '#aaa'
+        });
+        sim.start();
     });
-    sim.start();
 </script>
 </body>
 

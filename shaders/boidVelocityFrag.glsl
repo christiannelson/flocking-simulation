@@ -1,5 +1,4 @@
 uniform float clock;
-uniform float testing;
 uniform float del_change;
 uniform float separation_distance;
 uniform float alignment_distance;
@@ -69,6 +68,9 @@ void main() {
     dir.y *= 2.5;
     velocity -= normalize( dir ) * del_change * 6.;
 
+    // Nested loop that checks all other birds - this is computationally expensive
+    // but necessary for the flocking behavior. Could be optimized in future versions
+    // by using a spatial partitioning algorithm to only check nearby birds.
     for (float y=0.0;y<height;y++) {
         for (float x=0.0;x<width;x++) {
             vec2 ref = vec2( x + 0.6, y + 0.6 ) / resolution.xy;

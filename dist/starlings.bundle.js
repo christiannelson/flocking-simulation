@@ -44812,7 +44812,7 @@ void main() {
 
 	var BOID_GEOMETRY_FRAG = "varying vec4 vertex_color;\nvarying float zcoordi;\n\nvoid main() {\n    // Previous version that ignored color\n    //float z = 0.2 + ( 1000. - zcoordi ) / 1000. * vertex_color.x;\n    //gl_FragColor = vec4( z, z, z, 1. );\n\n    // Calculate depth-based brightness factor (0.2 to 1.0 range)\n    float brightness = 0.2 + (1000.0 - zcoordi) / 1000.0;\n    \n    // Apply brightness to each color channel independently\n    vec3 finalColor = vertex_color.rgb * brightness;\n    \n    gl_FragColor = vec4(finalColor, 1.0);\n}\n";
 
-	var BOID_VELOCITY_FRAG = "uniform float clock;\nuniform float testing;\nuniform float del_change;\nuniform float separation_distance;\nuniform float alignment_distance;\nuniform float cohesion_distance;\nuniform float freedom_distance;\nuniform vec3 predator;\n\nconst float width = resolution.x;\nconst float height = resolution.y;\nconst float PI = 3.14159;\nconst float PI_2 = PI * 2.0;\n\nfloat zoneRadius;\nfloat zoneRadiusSquared;\n\nfloat separationThresh;\nfloat alignmentThresh;\n\nconst float UPPER_bounds = bounds;\nconst float LOWER_bounds = -UPPER_bounds;\nconst float SPEED_LIMIT = 10.0;\n\nvoid main() {\n    zoneRadius = separation_distance + alignment_distance + cohesion_distance;\n    separationThresh = separation_distance / zoneRadius;\n    alignmentThresh = ( separation_distance + alignment_distance ) / zoneRadius;\n    zoneRadiusSquared = zoneRadius * zoneRadius;\n\n    vec2 textcoordi = gl_FragCoord.xy / resolution.xy;\n    vec3 birdPosition, birdVelocity;\n\n    vec3 selfPosition = texture2D( PositionTexture, textcoordi ).xyz;\n    vec3 selfVelocity = texture2D( VelocityTexture, textcoordi ).xyz;\n\n    float dist;\n    vec3 dir;\n    float distSquared;\n\n    float separationSquared = separation_distance * separation_distance;\n    float cohesionSquared = cohesion_distance * cohesion_distance;\n\n    float f;\n    float percent;\n\n    vec3 velocity = selfVelocity;\n\n    float limit = SPEED_LIMIT;\n\n    dir = predator * UPPER_bounds - selfPosition;\n    dir.z = 0.;\n    dist = length( dir );\n    distSquared = dist * dist;\n\n    float preyRadius = 50.0;\n    float preyRadiusSq = preyRadius * preyRadius;\n\n    if (dist < preyRadius) {\n        f = ( distSquared / preyRadiusSq ) * del_change * 160.;\n        velocity += normalize(dir) * f;\n        limit += 5.0;\n    }\n\n    vec3 central = vec3( 0., 0., 0. );\n    dir = selfPosition - central;\n    dist = length( dir );\n\n    dir.y *= 2.5;\n    velocity -= normalize( dir ) * del_change * 6.;\n\n    for (float y=0.0;y<height;y++) {\n        for (float x=0.0;x<width;x++) {\n            vec2 ref = vec2( x + 0.6, y + 0.6 ) / resolution.xy;\n            birdPosition = texture2D( PositionTexture, ref ).xyz;\n\n            dir = birdPosition - selfPosition;\n            dist = length(dir);\n            if (dist < 0.0001) continue;\n\n            distSquared = dist * dist;\n            if (distSquared > zoneRadiusSquared ) continue;\n\n            percent = distSquared / zoneRadiusSquared;\n            if ( percent < separationThresh ) { \n                f = (separationThresh / percent - 1.0) * del_change;\n                velocity -= normalize(dir) * f;\n            } else if ( percent < alignmentThresh ) {\n                float threshold = alignmentThresh - separationThresh;\n                float adjustedPercent = ( percent - separationThresh ) / threshold;\n                birdVelocity = texture2D( VelocityTexture, ref ).xyz;\n                f = ( 0.5 - cos( adjustedPercent * PI_2 ) * 0.5 + 0.5 ) * del_change;\n                velocity += normalize(birdVelocity) * f;\n            } else {\n                float threshold = 1.0 - alignmentThresh;\n                float adjustedPercent = ( percent - alignmentThresh ) / threshold;\n                f = ( 0.5 - ( cos( adjustedPercent * PI_2 ) * -0.5 + 0.5 ) ) * del_change;\n                velocity += normalize(dir) * f;\n            }\n        }\n    }\n    if ( length( velocity ) > limit ) {\n        velocity = normalize( velocity ) * limit;\n    }\n\n    gl_FragColor = vec4( velocity, 1.0 );\n}\n";
+	var BOID_VELOCITY_FRAG = "uniform float clock;\nuniform float del_change;\nuniform float separation_distance;\nuniform float alignment_distance;\nuniform float cohesion_distance;\nuniform float freedom_distance;\nuniform vec3 predator;\n\nconst float width = resolution.x;\nconst float height = resolution.y;\nconst float PI = 3.14159;\nconst float PI_2 = PI * 2.0;\n\nfloat zoneRadius;\nfloat zoneRadiusSquared;\n\nfloat separationThresh;\nfloat alignmentThresh;\n\nconst float UPPER_bounds = bounds;\nconst float LOWER_bounds = -UPPER_bounds;\nconst float SPEED_LIMIT = 10.0;\n\nvoid main() {\n    zoneRadius = separation_distance + alignment_distance + cohesion_distance;\n    separationThresh = separation_distance / zoneRadius;\n    alignmentThresh = ( separation_distance + alignment_distance ) / zoneRadius;\n    zoneRadiusSquared = zoneRadius * zoneRadius;\n\n    vec2 textcoordi = gl_FragCoord.xy / resolution.xy;\n    vec3 birdPosition, birdVelocity;\n\n    vec3 selfPosition = texture2D( PositionTexture, textcoordi ).xyz;\n    vec3 selfVelocity = texture2D( VelocityTexture, textcoordi ).xyz;\n\n    float dist;\n    vec3 dir;\n    float distSquared;\n\n    float separationSquared = separation_distance * separation_distance;\n    float cohesionSquared = cohesion_distance * cohesion_distance;\n\n    float f;\n    float percent;\n\n    vec3 velocity = selfVelocity;\n\n    float limit = SPEED_LIMIT;\n\n    dir = predator * UPPER_bounds - selfPosition;\n    dir.z = 0.;\n    dist = length( dir );\n    distSquared = dist * dist;\n\n    float preyRadius = 50.0;\n    float preyRadiusSq = preyRadius * preyRadius;\n\n    if (dist < preyRadius) {\n        f = ( distSquared / preyRadiusSq ) * del_change * 160.;\n        velocity += normalize(dir) * f;\n        limit += 5.0;\n    }\n\n    vec3 central = vec3( 0., 0., 0. );\n    dir = selfPosition - central;\n    dist = length( dir );\n\n    dir.y *= 2.5;\n    velocity -= normalize( dir ) * del_change * 6.;\n\n    // Nested loop that checks all other birds - this is computationally expensive\n    // but necessary for the flocking behavior. Could be optimized in future versions\n    // by using a spatial partitioning algorithm to only check nearby birds.\n    for (float y=0.0;y<height;y++) {\n        for (float x=0.0;x<width;x++) {\n            vec2 ref = vec2( x + 0.6, y + 0.6 ) / resolution.xy;\n            birdPosition = texture2D( PositionTexture, ref ).xyz;\n\n            dir = birdPosition - selfPosition;\n            dist = length(dir);\n            if (dist < 0.0001) continue;\n\n            distSquared = dist * dist;\n            if (distSquared > zoneRadiusSquared ) continue;\n\n            percent = distSquared / zoneRadiusSquared;\n            if ( percent < separationThresh ) { \n                f = (separationThresh / percent - 1.0) * del_change;\n                velocity -= normalize(dir) * f;\n            } else if ( percent < alignmentThresh ) {\n                float threshold = alignmentThresh - separationThresh;\n                float adjustedPercent = ( percent - separationThresh ) / threshold;\n                birdVelocity = texture2D( VelocityTexture, ref ).xyz;\n                f = ( 0.5 - cos( adjustedPercent * PI_2 ) * 0.5 + 0.5 ) * del_change;\n                velocity += normalize(birdVelocity) * f;\n            } else {\n                float threshold = 1.0 - alignmentThresh;\n                float adjustedPercent = ( percent - alignmentThresh ) / threshold;\n                f = ( 0.5 - ( cos( adjustedPercent * PI_2 ) * -0.5 + 0.5 ) ) * del_change;\n                velocity += normalize(dir) * f;\n            }\n        }\n    }\n    if ( length( velocity ) > limit ) {\n        velocity = normalize( velocity ) * limit;\n    }\n\n    gl_FragColor = vec4( velocity, 1.0 );\n}\n";
 
 	var BOID_VERTEX = "uniform float clock;\nuniform vec3 color;\n\nattribute vec2 reference;\nattribute float birdVertex;\nattribute vec3 birdColor;\n\nuniform sampler2D PositionTexture;\nuniform sampler2D VelocityTexture;\n\nvarying vec4 vertex_color;\nvarying float zcoordi;\n\nvoid main() {\n    vec4 temp_position = texture2D( PositionTexture, reference );\n    vec3 pos = temp_position.xyz;\n    vec3 velocity = normalize(texture2D( VelocityTexture, reference ).xyz);\n    vec3 newPosition = position;\n\n    if ( birdVertex == 4.0 || birdVertex == 7.0 ){ newPosition.y = sin( temp_position.w ) * 5.;}\n\n    newPosition = mat3( modelMatrix ) * newPosition;\n\n    velocity.z *= -1.;\n    float xz = length( velocity.xz );\n    float xyz = 1.;\n    float x = sqrt( 1. - velocity.y * velocity.y );\n\n    float cosry = velocity.x / xz;\n    float sinry = velocity.z / xz;\n\n    float cosrz = x / xyz;\n    float sinrz = velocity.y / xyz;\n\n    mat3 maty =  mat3( cosry, 0, -sinry, 0 , 1, 0 ,sinry, 0, cosry);\n    mat3 matz =  mat3( cosrz , sinrz, 0, -sinrz, cosrz, 0, 0, 0, 1);\n\n    newPosition =  maty * matz * newPosition;\n    newPosition += pos;\n\n    zcoordi = newPosition.z;\n\n    vertex_color = vec4( color, 1.0 );\n    gl_Position = projectionMatrix *  viewMatrix  * vec4( newPosition, 1.0 );\n}\n";
 
@@ -44867,6 +44867,9 @@ void main() {
 	            ? document.querySelector(selector)
 	            : selector;
 	        if (!this.container) throw new Error(`Container not found: ${selector}`);
+	        
+	        // Initialize animation frame ID
+	        this._rafId = null;
 	    }
 
 	    /**
@@ -44976,9 +44979,9 @@ void main() {
 	     * Creates and configures textures for position and velocity calculations.
 	     */
 	    initComputeRenderer() {
-	        const argumentHash = this.options.resolution;
+	        const resolution = this.options.resolution;
 	        const bounds = this.options.bounds;
-	        this.gpuAllocation = new GPUComputationRenderer(argumentHash, argumentHash, this.renderer);
+	        this.gpuAllocation = new GPUComputationRenderer(resolution, resolution, this.renderer);
 
 	        const dtPosition = this.gpuAllocation.createTexture();
 	        const dtVelocity = this.gpuAllocation.createTexture();
@@ -44999,7 +45002,6 @@ void main() {
 	        this.uniformPosition.del_change = {value: 0.0};
 	        this.uniformVelocity.clock = {value: 1.0};
 	        this.uniformVelocity.del_change = {value: 0.0};
-	        this.uniformVelocity.testing = {value: 1.0};
 	        this.uniformVelocity.separation_distance = {value: this.options.separation};
 	        this.uniformVelocity.alignment_distance = {value: this.options.alignment};
 	        this.uniformVelocity.cohesion_distance = {value: this.options.cohesion};
@@ -45013,7 +45015,10 @@ void main() {
 	        this.positionVariable.wrapT = RepeatWrapping;
 
 	        const error = this.gpuAllocation.init();
-	        if (error !== null) console.error(error);
+	        if (error !== null) {
+	            console.error('GPUComputationRenderer initialization error:', error);
+	            throw new Error('GPU computation initialization failed: ' + error);
+	        }
 	    }
 
 	    /**
@@ -45082,16 +45087,19 @@ void main() {
 	        this.uniformPosition.clock.value = now;
 	        this.uniformPosition.del_change.value = delta;
 
-	        // Update predator (mouse/touch) position for flocking influence
-	        this.uniformVelocity.predator.value.set(
-	            0.5 * this.mouseX / this.halfX,
-	            -0.5 * this.mouseY / this.halfY,
-	            0
-	        );
-
-	        // Reset mouse/touch position so predator only affects for a single frame
-	        this.mouseX = 10000;
-	        this.mouseY = 10000;
+	        // Only update predator position if mouse/touch is active (within bounds)
+	        if (Math.abs(this.mouseX) < this.halfX * 10 && Math.abs(this.mouseY) < this.halfY * 10) {
+	            // Update predator (mouse/touch) position for flocking influence
+	            this.uniformVelocity.predator.value.set(
+	                0.5 * this.mouseX / this.halfX,
+	                -0.5 * this.mouseY / this.halfY,
+	                0
+	            );
+	            
+	            // Reset mouse/touch position so predator only affects for a single frame
+	            this.mouseX = 10000;
+	            this.mouseY = 10000;
+	        }
 
 	        // Run GPGPU computation for simulation step
 	        this.gpuAllocation.compute();
@@ -45192,6 +45200,25 @@ void main() {
 	        if (this._rafId !== null) {
 	            cancelAnimationFrame(this._rafId);
 	            this._rafId = null;
+	        }
+	        
+	        // Remove event listeners
+	        if (this.wrapper) {
+	            this.wrapper.removeEventListener('mousemove', this.onDocumentMouseMove.bind(this));
+	            this.wrapper.removeEventListener('touchstart', this.onDocumentTouchStart.bind(this));
+	            this.wrapper.removeEventListener('touchmove', this.onDocumentTouchMove.bind(this));
+	        }
+	        window.removeEventListener('resize', this.onWindowResize.bind(this));
+	        
+	        // Dispose Three.js resources
+	        if (this.birdMesh) {
+	            this.scene.remove(this.birdMesh);
+	            this.birdMesh.geometry.dispose();
+	            this.birdMesh.material.dispose();
+	        }
+	        
+	        if (this.renderer) {
+	            this.renderer.dispose();
 	        }
 	    }
 	}
