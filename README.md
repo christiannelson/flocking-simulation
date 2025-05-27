@@ -41,13 +41,3 @@ This is a fork and upgrade of [techcentaur](https://github.com/techcentaur/Flock
 - Inspired by [OwenMcNaughton's Boids.js](https://github.com/OwenMcNaughton/Boids.js) and the Three.js community.
 
 Thanks to all original authors and open source contributors for making this project possible!
-
-## Informational Documents
-
-- [Mathematical model of flocking behavior](http://www.diva-portal.org/smash/get/diva2:561907/FULLTEXT03.pdf)
-- [Boids-algorithm - Pseudocode](http://www.kfish.org/boids/pseudocode.html)
-- [Research Paper - Craig Reynold's simulation](http://www.csc.kth.se/utbildning/kandidatexjobb/datateknik/2011/rapport/erneholm_carl-oscar_K11044.pdf)
-
-## A Useful Container
-- Overleaf LaTex editor - mathematical modeling, click [here](https://www.overleaf.com/15649991qxqnpwqzxvjr)
-- A [video](https://www.youtube.com/watch?v=b8eZJnbDHIg) of falcon attack on flock of starling.
