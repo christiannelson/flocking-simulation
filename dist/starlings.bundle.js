@@ -44810,7 +44810,7 @@ void main() {
 
 	var BOID_POSITION_FRAG = "uniform float clock;\nuniform float del_change;\n\nvoid main() {\n    vec2 textcoordi = gl_FragCoord.xy / resolution.xy;\n    vec4 temp_position = texture2D( PositionTexture, textcoordi );\n    vec3 position = temp_position.xyz;\n    vec3 velocity = texture2D( VelocityTexture, textcoordi ).xyz;\n\n    float wcoordinate = temp_position.w;\n\n    wcoordinate = mod( ( wcoordinate + del_change*2.0 +\n        length(velocity.xz) * del_change * 3. +\n        max(velocity.y, 0.0) * del_change * 6. ), 50.0 );\n\n    gl_FragColor = vec4( position + velocity * del_change * 15. , wcoordinate );\n}\n";
 
-	var BOID_GEOMETRY_FRAG = "varying vec4 vertex_color;\nvarying float zcoordi;\n\nvoid main() {\n    // Previous version that ignored color\n    //float z = 0.2 + ( 1000. - zcoordi ) / 1000. * vertex_color.x;\n    //gl_FragColor = vec4( z, z, z, 1. );\n\n    // Calculate depth-based brightness factor (0.2 to 1.0 range)\n    float brightness = 0.2 + (1000.0 - zcoordi) / 1000.0;\n    \n    // Apply brightness to each color channel independently\n    vec3 finalColor = vertex_color.rgb * brightness;\n    \n    gl_FragColor = vec4(finalColor, 1.0);\n}\n";
+	var BOID_GEOMETRY_FRAG = "varying vec4 vertex_color;\nvarying float zcoordi;\n\nvoid main() {\n    // Previous version that ignored color.\n    //float z = 0.2 + ( 1000. - zcoordi ) / 1000. * vertex_color.x;\n    //gl_FragColor = vec4( z, z, z, 1. );\n\n    // Previous version that used depth to calculate brightness.\n    // float brightness = 0.2 + (1000.0 - zcoordi) / 1000.0;\n    // vec3 finalColor = vertex_color.rgb * brightness;\n    \n    vec3 finalColor = vertex_color.rgb;\n    \n    gl_FragColor = vec4(finalColor, 1.0);\n}\n";
 
 	var BOID_VELOCITY_FRAG = "uniform float clock;\nuniform float del_change;\nuniform float separation_distance;\nuniform float alignment_distance;\nuniform float cohesion_distance;\nuniform float freedom_distance;\nuniform vec3 predator;\n\nconst float width = resolution.x;\nconst float height = resolution.y;\nconst float PI = 3.14159;\nconst float PI_2 = PI * 2.0;\n\nfloat zoneRadius;\nfloat zoneRadiusSquared;\n\nfloat separationThresh;\nfloat alignmentThresh;\n\nconst float UPPER_bounds = bounds;\nconst float LOWER_bounds = -UPPER_bounds;\nconst float SPEED_LIMIT = 10.0;\n\nvoid main() {\n    zoneRadius = separation_distance + alignment_distance + cohesion_distance;\n    separationThresh = separation_distance / zoneRadius;\n    alignmentThresh = ( separation_distance + alignment_distance ) / zoneRadius;\n    zoneRadiusSquared = zoneRadius * zoneRadius;\n\n    vec2 textcoordi = gl_FragCoord.xy / resolution.xy;\n    vec3 birdPosition, birdVelocity;\n\n    vec3 selfPosition = texture2D( PositionTexture, textcoordi ).xyz;\n    vec3 selfVelocity = texture2D( VelocityTexture, textcoordi ).xyz;\n\n    float dist;\n    vec3 dir;\n    float distSquared;\n\n    float separationSquared = separation_distance * separation_distance;\n    float cohesionSquared = cohesion_distance * cohesion_distance;\n\n    float f;\n    float percent;\n\n    vec3 velocity = selfVelocity;\n\n    float limit = SPEED_LIMIT;\n\n    dir = predator * UPPER_bounds - selfPosition;\n    dir.z = 0.;\n    dist = length( dir );\n    distSquared = dist * dist;\n\n    float preyRadius = 50.0;\n    float preyRadiusSq = preyRadius * preyRadius;\n\n    if (dist < preyRadius) {\n        f = ( distSquared / preyRadiusSq ) * del_change * 160.;\n        velocity += normalize(dir) * f;\n        limit += 5.0;\n    }\n\n    vec3 central = vec3( 0., 0., 0. );\n    dir = selfPosition - central;\n    dist = length( dir );\n\n    dir.y *= 2.5;\n    velocity -= normalize( dir ) * del_change * 6.;\n\n    // Nested loop that checks all other birds - this is computationally expensive\n    // but necessary for the flocking behavior. Could be optimized in future versions\n    // by using a spatial partitioning algorithm to only check nearby birds.\n    for (float y=0.0;y<height;y++) {\n        for (float x=0.0;x<width;x++) {\n            vec2 ref = vec2( x + 0.6, y + 0.6 ) / resolution.xy;\n            birdPosition = texture2D( PositionTexture, ref ).xyz;\n\n            dir = birdPosition - selfPosition;\n            dist = length(dir);\n            if (dist < 0.0001) continue;\n\n            distSquared = dist * dist;\n            if (distSquared > zoneRadiusSquared ) continue;\n\n            percent = distSquared / zoneRadiusSquared;\n            if ( percent < separationThresh ) { \n                f = (separationThresh / percent - 1.0) * del_change;\n                velocity -= normalize(dir) * f;\n            } else if ( percent < alignmentThresh ) {\n                float threshold = alignmentThresh - separationThresh;\n                float adjustedPercent = ( percent - separationThresh ) / threshold;\n                birdVelocity = texture2D( VelocityTexture, ref ).xyz;\n                f = ( 0.5 - cos( adjustedPercent * PI_2 ) * 0.5 + 0.5 ) * del_change;\n                velocity += normalize(birdVelocity) * f;\n            } else {\n                float threshold = 1.0 - alignmentThresh;\n                float adjustedPercent = ( percent - alignmentThresh ) / threshold;\n                f = ( 0.5 - ( cos( adjustedPercent * PI_2 ) * -0.5 + 0.5 ) ) * del_change;\n                velocity += normalize(dir) * f;\n            }\n        }\n    }\n    if ( length( velocity ) > limit ) {\n        velocity = normalize( velocity ) * limit;\n    }\n\n    gl_FragColor = vec4( velocity, 1.0 );\n}\n";
 
@@ -44831,6 +44831,7 @@ void main() {
 	 * @param {number} [options.bounds=500] - Simulation bounds.
 	 * @param {string} [options.backgroundColor='#ffffff'] - Background/fog color.
 	 * @param {string} [options.birdColor='#ff2200'] - Bird color.
+	 * @param {boolean} [options.transparent=false] - Make background transparent.
 	 */
 
 	/**
@@ -44859,7 +44860,8 @@ void main() {
 	            bounds: 500,
 	            // Visual appearance
 	            backgroundColor: '#fff',
-	            birdColor: '#ccc'
+	            birdColor: '#ccc',
+	            transparent: false
 	        }, options);
 
 	        // Get container element
@@ -44905,6 +44907,7 @@ void main() {
 	        // Log startup information
 	        console.log(`Starlings simulation starting with ${birdsCount} birds`);
 	        console.log(`Using Three.js version ${REVISION}`);
+	        console.log(`Transparency is ${this.options.transparent}`);
 
 	        this.shaders = shaders;
 
@@ -44932,9 +44935,6 @@ void main() {
 	     * Sets up the container, camera perspective, scene background, and event listeners.
 	     */
 	    initScene() {
-	        const wrapper = document.createElement('div');
-	        this.container.appendChild(wrapper);
-	        this.wrapper = wrapper;
 
 	        const rect = this.container.getBoundingClientRect();
 	        const width = rect.width || window.innerWidth;
@@ -44942,13 +44942,24 @@ void main() {
 	        this.camera = new PerspectiveCamera(75, width / height, 1, 3000);
 
 	        this.scene = new Scene();
-	        this.scene.background = new Color(this.options.backgroundColor);
-	        this.scene.fog = new Fog(this.options.backgroundColor, 100, 1000);
 
-	        this.renderer = new WebGLRenderer({antialias: true});
-	        this.renderer.setClearColor(this.options.backgroundColor);
+	        if (!this.options.transparent) {
+	            this.scene.background = new Color(this.options.backgroundColor);
+	            this.scene.fog = new Fog(this.options.backgroundColor, 100, 1000);
+	        }
+
+	        this.renderer = new WebGLRenderer({
+	            antialias: true,
+	            alpha: this.options.transparent
+	        });
+
+	        if (this.options.transparent) {
+	            this.renderer.setClearColor(0x000000, 0);
+	        } else {
+	            this.renderer.setClearColor(this.options.backgroundColor);
+	        }
 	        this.renderer.setSize(width, height);
-	        wrapper.appendChild(this.renderer.domElement);
+	        this.container.appendChild(this.renderer.domElement);
 
 	        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 	        this.controls.addEventListener('change', this.render.bind(this));
@@ -44968,9 +44979,9 @@ void main() {
 	        this.spotLight.shadow.bias = 0.00;
 	        this.scene.add(this.spotLight);
 
-	        this.wrapper.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
-	        this.wrapper.addEventListener('touchstart', this.onDocumentTouchStart.bind(this), false);
-	        this.wrapper.addEventListener('touchmove', this.onDocumentTouchMove.bind(this), false);
+	        this.container.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
+	        this.container.addEventListener('touchstart', this.onDocumentTouchStart.bind(this), false);
+	        this.container.addEventListener('touchmove', this.onDocumentTouchMove.bind(this), false);
 	        window.addEventListener('resize', this.onWindowResize.bind(this), false);
 	    }
 
@@ -45203,10 +45214,10 @@ void main() {
 	        }
 	        
 	        // Remove event listeners
-	        if (this.wrapper) {
-	            this.wrapper.removeEventListener('mousemove', this.onDocumentMouseMove.bind(this));
-	            this.wrapper.removeEventListener('touchstart', this.onDocumentTouchStart.bind(this));
-	            this.wrapper.removeEventListener('touchmove', this.onDocumentTouchMove.bind(this));
+	        if (this.container) {
+	            this.container.removeEventListener('mousemove', this.onDocumentMouseMove.bind(this));
+	            this.container.removeEventListener('touchstart', this.onDocumentTouchStart.bind(this));
+	            this.container.removeEventListener('touchmove', this.onDocumentTouchMove.bind(this));
 	        }
 	        window.removeEventListener('resize', this.onWindowResize.bind(this));
 	        

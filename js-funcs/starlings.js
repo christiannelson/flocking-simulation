@@ -13,12 +13,12 @@
  * @param {number} [options.bounds=500] - Simulation bounds.
  * @param {string} [options.backgroundColor='#ffffff'] - Background/fog color.
  * @param {string} [options.birdColor='#ff2200'] - Bird color.
+ * @param {boolean} [options.transparent=false] - Make background transparent.
  */
 
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import {GPUComputationRenderer} from 'three/examples/jsm/misc/GPUComputationRenderer.js';
-
 
 // Import BirdGeometry as a reusable module for bird mesh construction
 import BirdGeometry from './BirdGeometry.js';
@@ -54,7 +54,8 @@ class Starlings {
             bounds: 500,
             // Visual appearance
             backgroundColor: '#fff',
-            birdColor: '#ccc'
+            birdColor: '#ccc',
+            transparent: false
         }, options);
 
         // Get container element
@@ -100,6 +101,7 @@ class Starlings {
         // Log startup information
         console.log(`Starlings simulation starting with ${birdsCount} birds`);
         console.log(`Using Three.js version ${THREE.REVISION}`);
+        console.log(`Transparency is ${this.options.transparent}`);
 
         this.shaders = shaders;
 
@@ -127,9 +129,6 @@ class Starlings {
      * Sets up the container, camera perspective, scene background, and event listeners.
      */
     initScene() {
-        const wrapper = document.createElement('div');
-        this.container.appendChild(wrapper);
-        this.wrapper = wrapper;
 
         const rect = this.container.getBoundingClientRect();
         const width = rect.width || window.innerWidth;
@@ -137,13 +136,24 @@ class Starlings {
         this.camera = new THREE.PerspectiveCamera(75, width / height, 1, 3000);
 
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(this.options.backgroundColor);
-        this.scene.fog = new THREE.Fog(this.options.backgroundColor, 100, 1000);
 
-        this.renderer = new THREE.WebGLRenderer({antialias: true});
-        this.renderer.setClearColor(this.options.backgroundColor);
+        if (!this.options.transparent) {
+            this.scene.background = new THREE.Color(this.options.backgroundColor);
+            this.scene.fog = new THREE.Fog(this.options.backgroundColor, 100, 1000);
+        }
+
+        this.renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: this.options.transparent
+        });
+
+        if (this.options.transparent) {
+            this.renderer.setClearColor(0x000000, 0);
+        } else {
+            this.renderer.setClearColor(this.options.backgroundColor);
+        }
         this.renderer.setSize(width, height);
-        wrapper.appendChild(this.renderer.domElement);
+        this.container.appendChild(this.renderer.domElement);
 
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.addEventListener('change', this.render.bind(this));
@@ -163,9 +173,9 @@ class Starlings {
         this.spotLight.shadow.bias = 0.00;
         this.scene.add(this.spotLight);
 
-        this.wrapper.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
-        this.wrapper.addEventListener('touchstart', this.onDocumentTouchStart.bind(this), false);
-        this.wrapper.addEventListener('touchmove', this.onDocumentTouchMove.bind(this), false);
+        this.container.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
+        this.container.addEventListener('touchstart', this.onDocumentTouchStart.bind(this), false);
+        this.container.addEventListener('touchmove', this.onDocumentTouchMove.bind(this), false);
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
     }
 
@@ -398,10 +408,10 @@ class Starlings {
         }
         
         // Remove event listeners
-        if (this.wrapper) {
-            this.wrapper.removeEventListener('mousemove', this.onDocumentMouseMove.bind(this));
-            this.wrapper.removeEventListener('touchstart', this.onDocumentTouchStart.bind(this));
-            this.wrapper.removeEventListener('touchmove', this.onDocumentTouchMove.bind(this));
+        if (this.container) {
+            this.container.removeEventListener('mousemove', this.onDocumentMouseMove.bind(this));
+            this.container.removeEventListener('touchstart', this.onDocumentTouchStart.bind(this));
+            this.container.removeEventListener('touchmove', this.onDocumentTouchMove.bind(this));
         }
         window.removeEventListener('resize', this.onWindowResize.bind(this));
         

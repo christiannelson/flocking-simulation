@@ -19,6 +19,7 @@
       width: 100%;
       height: 100%;
       z-index: -1;
+      background: linear-gradient(200deg, #FF9F39 0%, #FFE4E4 100%);
     }
   </style>
 </head>
@@ -31,11 +32,11 @@
         const sim = new Starlings('#container', {
             birds: 4096,
             // resolution: 72,
-            birdColor: '#aaa'
+            birdColor: '#aaa',
+            transparent: true
         });
         sim.start();
     });
 </script>
 </body>
-
 </html>
