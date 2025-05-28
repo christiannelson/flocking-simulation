@@ -44869,7 +44869,7 @@ void main() {
 	            ? document.querySelector(selector)
 	            : selector;
 	        if (!this.container) throw new Error(`Container not found: ${selector}`);
-	        
+
 	        // Initialize animation frame ID
 	        this._rafId = null;
 	    }
@@ -45098,19 +45098,16 @@ void main() {
 	        this.uniformPosition.clock.value = now;
 	        this.uniformPosition.del_change.value = delta;
 
-	        // Only update predator position if mouse/touch is active (within bounds)
-	        if (Math.abs(this.mouseX) < this.halfX * 10 && Math.abs(this.mouseY) < this.halfY * 10) {
-	            // Update predator (mouse/touch) position for flocking influence
-	            this.uniformVelocity.predator.value.set(
-	                0.5 * this.mouseX / this.halfX,
-	                -0.5 * this.mouseY / this.halfY,
-	                0
-	            );
-	            
-	            // Reset mouse/touch position so predator only affects for a single frame
-	            this.mouseX = 10000;
-	            this.mouseY = 10000;
-	        }
+	        // Update predator (mouse/touch) position for flocking influence
+	        this.uniformVelocity.predator.value.set(
+	            0.5 * this.mouseX / this.halfX,
+	            -0.5 * this.mouseY / this.halfY,
+	            0
+	        );
+
+	        // Reset mouse/touch position so predator only affects for a single frame
+	        this.mouseX = 10000;
+	        this.mouseY = 10000;
 
 	        // Run GPGPU computation for simulation step
 	        this.gpuAllocation.compute();
@@ -45212,7 +45209,7 @@ void main() {
 	            cancelAnimationFrame(this._rafId);
 	            this._rafId = null;
 	        }
-	        
+
 	        // Remove event listeners
 	        if (this.container) {
 	            this.container.removeEventListener('mousemove', this.onDocumentMouseMove.bind(this));
@@ -45220,14 +45217,14 @@ void main() {
 	            this.container.removeEventListener('touchmove', this.onDocumentTouchMove.bind(this));
 	        }
 	        window.removeEventListener('resize', this.onWindowResize.bind(this));
-	        
+
 	        // Dispose Three.js resources
 	        if (this.birdMesh) {
 	            this.scene.remove(this.birdMesh);
 	            this.birdMesh.geometry.dispose();
 	            this.birdMesh.material.dispose();
 	        }
-	        
+
 	        if (this.renderer) {
 	            this.renderer.dispose();
 	        }
